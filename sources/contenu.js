@@ -2,7 +2,7 @@ window.CONTENU = {
 "meta": {
   "titre": "Livrets de positionnement",
   "sous_titre": "Arabe standard moderne (Fusha) — Années 1 à 5",
-  "etablissement": "Association de la Fraternité d'Elne / Lycée Alfred Sauvy",
+  "etablissement": "Association de la Fraternité d'Elne",
   "conception": "M. KADDOURI / Y. NAJIH",
   "annee_scolaire": "2026-2027",
   "seuils": {"reussi": 12, "orientation": 8, "total": 16},
