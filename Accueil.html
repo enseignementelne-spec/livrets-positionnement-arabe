@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Livrets de positionnement — Accueil</title>
+<link rel="stylesheet" href="sources/commun.css">
+<style>
+  header { background: var(--primaire); color: #fff; padding: 36px 48px 30px; border-bottom: 8px solid var(--or); }
+  header h1 { font: 700 42px var(--police-titre); margin: 0 0 6px; }
+  header p { margin: 0; opacity: .85; font-size: 18px; }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 24px 60px; }
+  h2 { font: 700 26px var(--police-titre); color: var(--primaire); margin: 32px 0 14px; }
+  ol { font-size: 18px; line-height: 1.7; }
+  .grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+  .tuile { display: block; text-decoration: none; color: var(--encre); background: var(--carte); border-radius: 18px;
+           padding: 20px 22px; border-top: 8px solid var(--c); box-shadow: 0 4px 18px rgba(26,77,92,.1); }
+  .tuile:hover, .tuile:focus { outline: 3px solid var(--c); }
+  .tuile b { display: block; font: 700 25px var(--police-titre); color: var(--c); }
+  .tuile span { color: var(--encre-douce); font-size: 16px; }
+  .docs { columns: 2; font-size: 17px; line-height: 1.9; }
+  .docs a { color: var(--primaire); }
+  kbd { border: 1px solid #999; border-radius: 5px; padding: 0 6px; font-size: 15px; }
+  footer { text-align: center; color: var(--encre-douce); font-size: 14px; padding: 20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Livrets de positionnement</h1>
+  <p>Arabe standard moderne (Fusha) · Années 1 à 5 · Association de la Fraternité d'Elne / Lycée Alfred Sauvy</p>
+</header>
+<main>
+  <h2>Comment faire</h2>
+  <ol>
+    <li><b>Entretien individuel</b> (≈ 4 min par élève) avec la fiche d'entretien : il donne le livret de départ.</li>
+    <li><b>Séance de livret</b> (≈ 15 min) pour un petit groupe : projeter le livret ; les élèves répondent sur leur feuille.</li>
+    <li><b>Correction</b> avec la fiche enseignante du livret : elle indique la suite.</li>
+  </ol>
+  <h2>Projeter</h2>
+  <div class="grille">
+    <a class="tuile" style="--c: var(--or)" href="sources/projection.html#entretien"><b>Entretien</b><span>Écran à montrer à l'élève</span></a>
+    <a class="tuile" style="--c: var(--livret-1)" href="sources/projection.html#livret-1"><b>Livret 1</b><span>Acquis de l'Année 1</span></a>
+    <a class="tuile" style="--c: var(--livret-2)" href="sources/projection.html#livret-2"><b>Livret 2</b><span>Acquis de l'Année 2</span></a>
+    <a class="tuile" style="--c: var(--livret-3)" href="sources/projection.html#livret-3"><b>Livret 3</b><span>Acquis de l'Année 3</span></a>
+    <a class="tuile" style="--c: var(--livret-4)" href="sources/projection.html#livret-4"><b>Livret 4</b><span>Acquis de l'Année 4</span></a>
+    <a class="tuile" style="--c: var(--livret-5)" href="sources/projection.html#livret-5"><b>Livret 5</b><span>Acquis de l'Année 5</span></a>
+  </div>
+  <p>Au clavier : <kbd>→</kbd> <kbd>←</kbd> écrans · <kbd>Espace</kbd> son de l'item · <kbd>C</kbd> consigne · <kbd>F</kbd> plein écran.</p>
+  <h2>Imprimer</h2>
+  <div class="docs">
+    <a href="imprimer/Guide%20general.pdf">Guide de l'enseignante</a><br>
+    <a href="imprimer/Fiche%20entretien.pdf">Fiche d'entretien (une par élève)</a><br>
+    <a href="imprimer/Fiche%20synthese%20classe.pdf">Fiche de synthèse de classe</a><br>
+    <a href="imprimer/Livret%201%20-%20feuille%20eleve.pdf">Livret 1 — feuille élève</a><br>
+    <a href="imprimer/Livret%201%20-%20fiche%20enseignante.pdf">Livret 1 — fiche enseignante</a><br>
+    <a href="imprimer/Livret%202%20-%20feuille%20eleve.pdf">Livret 2 — feuille élève</a><br>
+    <a href="imprimer/Livret%202%20-%20fiche%20enseignante.pdf">Livret 2 — fiche enseignante</a><br>
+    <a href="imprimer/Livret%203%20-%20feuille%20eleve.pdf">Livret 3 — feuille élève</a><br>
+    <a href="imprimer/Livret%203%20-%20fiche%20enseignante.pdf">Livret 3 — fiche enseignante</a><br>
+    <a href="imprimer/Livret%204%20-%20feuille%20eleve.pdf">Livret 4 — feuille élève</a><br>
+    <a href="imprimer/Livret%204%20-%20fiche%20enseignante.pdf">Livret 4 — fiche enseignante</a><br>
+    <a href="imprimer/Livret%205%20-%20feuille%20eleve.pdf">Livret 5 — feuille élève</a><br>
+    <a href="imprimer/Livret%205%20-%20fiche%20enseignante.pdf">Livret 5 — fiche enseignante</a>
+  </div>
+</main>
+<footer>Conception pédagogique : M. KADDOURI / Y. NAJIH · Fonctionne sans connexion internet</footer>
+</body>
+</html>

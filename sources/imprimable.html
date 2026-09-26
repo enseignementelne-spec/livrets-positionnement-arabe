@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Documents à imprimer</title>
+<link rel="stylesheet" href="commun.css">
+<style>
+  @page { size: A4; margin: 12mm; }
+  body { background: #e9e5de; font-size: 11.5pt; }
+  .page { background: #fff; width: 210mm; min-height: 297mm; margin: 8mm auto; padding: 12mm 13mm;
+          box-shadow: 0 2px 12px rgba(0,0,0,.15); }
+  .paysage .page { width: 297mm; min-height: 210mm; }
+  @media print {
+    body { background: #fff; }
+    .page, .paysage .page { margin: 0; padding: 0; width: auto; min-height: 0; box-shadow: none; break-after: page; }
+    .page:last-child { break-after: auto; }
+  }
+  h1 { font: 700 19pt var(--police-titre); color: var(--primaire); margin: 0 0 1mm; }
+  h2 { font: 700 12.5pt var(--police-fr); color: #fff; background: var(--primaire); padding: 1.4mm 4mm;
+       border-radius: 2mm; margin: 3mm 0 1.5mm; break-after: avoid; }
+  h3 { font: 700 11.5pt var(--police-fr); color: var(--primaire); margin: 4mm 0 1mm; break-after: avoid; }
+  p, li { line-height: 1.45; }
+  p { margin: 1mm 0; }
+  ul, ol { margin: 1mm 0; }
+  .entete { display: flex; justify-content: space-between; align-items: flex-end; gap: 6mm;
+            border-bottom: 3px solid var(--accent, var(--primaire)); padding-bottom: 2mm; }
+  .entete .petit { color: var(--encre-douce); font-size: 9.5pt; text-align: right; }
+  .rappel { font-size: 10pt; color: var(--encre-douce); margin: 1.5mm 0 0; }
+  .champs { display: grid; grid-template-columns: 2fr 2fr 1fr 1.4fr; gap: 3mm 6mm; margin: 3mm 0 1mm; }
+  .champ { border-bottom: 1px solid #444; padding-top: 5mm; font-size: 9.5pt; color: var(--encre-douce); }
+  .item { display: grid; grid-template-columns: 13mm 1fr; gap: 3mm; align-items: center; padding: 2mm 0;
+          border-bottom: 1px solid var(--trait); break-inside: avoid; }
+  .num { width: 11mm; height: 11mm; border-radius: 3mm; border: 2px solid var(--primaire); display: grid;
+         place-items: center; font: 700 13pt var(--police-fr); color: var(--primaire); }
+  .resume { font-size: 10.5pt; display: flex; flex-wrap: wrap; align-items: center; gap: 2mm 5mm; }
+  .reponse { display: flex; align-items: center; gap: 7mm; flex-wrap: wrap; margin-top: 1mm; }
+  .choix { display: inline-flex; align-items: center; gap: 2mm; font-size: 11.5pt; }
+  .choix .n { width: 7mm; height: 7mm; border: 1.5px solid #333; border-radius: 50%; display: grid;
+              place-items: center; font: 700 10.5pt var(--police-fr); flex: none; }
+  .choix .ar { font-size: 20pt; line-height: 1.35; }
+  .icone-mini svg { width: 10mm; height: 10mm; vertical-align: middle; }
+  .ar-grand { font-size: 19pt; line-height: 1.6; }
+  .ar-geant { font-size: 40pt; line-height: 1.4; padding: 0 6mm; }
+  .blanc { display: inline-block; min-width: 34mm; border-bottom: 1.5px dotted #333; margin: 0 2mm; }
+  .ligne { flex: 1; min-width: 90mm; height: 11mm; border-bottom: 1.5px dotted #333; }
+  .case { width: 18mm; height: 13mm; border: 1.5px solid #333; border-radius: 2mm; }
+  .case.grande { width: 24mm; height: 24mm; }
+  .racine { display: flex; direction: rtl; align-items: center; gap: 3mm; font-size: 16pt; }
+  .puce { border: 1.5px solid #333; border-radius: 2mm; padding: 0 3mm; font-size: 17pt; }
+  .texte-lecture { font-size: 15pt; line-height: 2; border: 1.5px solid var(--trait);
+                   border-inline-start: 5px solid var(--accent, var(--primaire)); border-radius: 2mm;
+                   padding: 2mm 5mm; margin: 2mm 0; break-inside: avoid; }
+  .enseignante { border: 2px dashed var(--encre-douce); border-radius: 3mm; padding: 3mm 4mm; margin-top: 5mm;
+                 break-inside: avoid; font-size: 10.5pt; }
+  .scores { display: flex; gap: 7mm; flex-wrap: wrap; margin: 2mm 0; }
+  .boite { display: inline-block; width: 4mm; height: 4mm; border: 1.3px solid #333; vertical-align: -0.5mm;
+           margin-inline-end: 1.5mm; }
+  .mixte { unicode-bidi: plaintext; font-family: var(--police-fr), var(--police-ar); }
+  table { width: 100%; border-collapse: collapse; font-size: 9.8pt; margin: 2mm 0 2mm; }
+  th, td { border: 1px solid #bbb; padding: 0.8mm 2mm; text-align: left; vertical-align: middle; }
+  th { background: #eef3f4; }
+  td .ar { font-size: 13pt; line-height: 1.4; }
+  .synthese td { height: 9mm; }
+  .note { font-size: 9.5pt; color: var(--encre-douce); }
+</style>
+</head>
+<body>
+<main id="doc"></main>
+<script src="contenu.js"></script>
+<script src="partage.js"></script>
+<script>
+"use strict";
+const C = window.CONTENU;
+const params = new URLSearchParams(location.search);
+const typeDoc = params.get("doc") || "guide";
+const numeroDemande = Number(params.get("livret") || "1");
+const zone = document.getElementById("doc");
+
+function ar(texte, classe) { return el("span", "ar " + (classe || ""), texte); }
+function mixte(texte) { return el("span", "mixte", texte); }
+function boite() { return el("span", "boite"); }
+function trouverLivret(n) { return C.livrets.find((l) => l.numero === n); }
+function numeroItem(item) { return Number(item.id.split("-")[1]); }
+function nomPartie(id) { return C.parties.find((p) => p.id === id).nom; }
+
+function page(enfants, classe) {
+  const section = el("section", "page " + (classe || ""), enfants);
+  zone.append(section);
+  return section;
+}
+
+function tableau(entetes, lignes) {
+  const corps = el("tbody", "", lignes.map((ligne) => el("tr", "", ligne.map((c) => el("td", "", c)))));
+  return el("table", "", [el("thead", "", el("tr", "", entetes.map((h) => el("th", "", h)))), corps]);
+}
+
+function enonceAvecBlanc(texte) {
+  const bloc = el("span", "ar ar-grand");
+  texte.split(/…+/).forEach((morceau, i) => {
+    if (i) bloc.append(el("span", "blanc", " "));
+    bloc.append(document.createTextNode(morceau));
+  });
+  return bloc;
+}
+
+function choix(n, contenu) { return el("span", "choix", [el("span", "n", String(n))].concat(contenu)); }
+
+function iconeMini(nom) {
+  const bloc = el("span", "icone-mini");
+  bloc.innerHTML = window.ICONES[nom];
+  bloc.append(" " + window.LIBELLES_ICONES[nom]);
+  return bloc;
+}
+
+function aTrou(item) { return Boolean(item.enonce && item.enonce.includes("…")); }
+
+function resume(item) {
+  const bloc = el("div", "resume");
+  if (item.fr) bloc.append(el("span", "", item.fr));
+  if (item.question) bloc.append(el("span", "", item.question));
+  if (item.surligne) bloc.append(motSurligne(item.surligne, "ar-grand"));
+  if (item.enonce && item.type !== "ecrire" && aTrou(item)) bloc.append(enonceAvecBlanc(item.enonce));
+  if (item.enonce && !aTrou(item) && item.consigne !== "c-ajouter-voyelle") bloc.append(ar(item.enonce, "ar-grand"));
+  if (item.mots && item.type === "ecrire") bloc.append(el("span", "reponse", item.mots.map((m) => ar(m, "puce"))));
+  return bloc;
+}
+
+function reponseEleve(item) {
+  const bloc = el("div", "reponse");
+  switch (item.type) {
+    case "choix":
+    case "lettre-surlignee":
+      item.options.forEach((o, i) => bloc.append(choix(i + 1, ar(o))));
+      break;
+    case "choix-images":
+    case "choix-couleurs":
+    case "intrus":
+      item.options.forEach((_, i) => bloc.append(choix(i + 1, [])));
+      break;
+    case "choix-fr":
+      item.options.forEach((o, i) => bloc.append(choix(i + 1, el("span", "", o))));
+      break;
+    case "vrai-faux":
+      bloc.append(choix(1, el("span", "", "Vrai")), choix(2, el("span", "", "Faux")));
+      break;
+    case "choix-icones":
+      item.options.forEach((o, i) => bloc.append(choix(i + 1, iconeMini(o))));
+      break;
+    case "chiffres":
+      bloc.append(el("span", "case"));
+      break;
+    case "racine":
+      bloc.append(el("span", "racine", [el("span", "case"), "-", el("span", "case"), "-", el("span", "case")]));
+      break;
+    case "numeroter":
+      item.mots.forEach((m) => bloc.append(el("span", "choix", [ar(m, "puce"), el("span", "case")])));
+      break;
+    default:
+      if (item.consigne === "c-ajouter-voyelle") bloc.append(ar(item.enonce, "ar-geant"));
+      else if (aTrou(item)) bloc.append(enonceAvecBlanc(item.enonce), item.indice ? ar(item.indice, "ar-grand") : "");
+      else if (item.consigne === "c-dictee-lettre") bloc.append(el("span", "case grande"));
+      else bloc.append(el("span", "ligne"));
+  }
+  return bloc;
+}
+
+function blocItem(item) {
+  return el("div", "item", [el("div", "num", String(numeroItem(item))), el("div", "", [resume(item), reponseEleve(item)])]);
+}
+
+function blocPartie(livret, idPartie) {
+  const items = livret.items.filter((i) => i.partie === idPartie);
+  const bloc = el("div", "partie", [el("h2", "", nomPartie(idPartie))]);
+  const avecTexte = items.find((i) => i.texte);
+  if (avecTexte) bloc.append(ar(livret.textes[avecTexte.texte], "texte-lecture"));
+  items.forEach((i) => bloc.append(blocItem(i)));
+  return bloc;
+}
+
+function feuille(livret) {
+  document.documentElement.style.setProperty("--accent", livret.couleur);
+  document.title = `Livret ${livret.numero} - feuille eleve`;
+  const suite = livret.numero === 5 ? "niveau A2 atteint" : `Livret ${livret.numero + 1}`;
+  const descente = livret.numero === 1 ? "Année 1" : `Livret ${livret.numero - 1}`;
+  page([
+    el("div", "entete", [
+      el("div", "", [el("h1", "", `Livret ${livret.numero} — ma feuille de réponses`),
+        el("div", "rappel", `Acquis de l'Année ${livret.annee}`)]),
+      el("div", "petit", [C.meta.etablissement, el("br"), `Année scolaire ${C.meta.annee_scolaire}`])]),
+    el("div", "champs", ["Nom", "Prénom", "Âge", "Date"].map((c) => el("div", "champ", c))),
+    el("p", "rappel", "Regarde l'écran et écoute. Réponds ici : entoure ou écris. Si tu ne sais pas, laisse vide."),
+    blocPartie(livret, "langue"),
+    blocPartie(livret, "ecrit")]);
+  page([
+    blocPartie(livret, "lecture"),
+    blocPartie(livret, "ecoute"),
+    el("div", "enseignante", [
+      el("b", "", "Réservé à l'enseignante"),
+      el("div", "scores", ["Langue …/4", "Écrit …/4", "Lecture …/4", "Écoute …/4", "Total …/16"].map((s) => el("b", "", s))),
+      el("div", "", [boite(), `12 ou plus : ${suite}     `, boite(), `8 à 11 : orientation Année ${livret.annee}     `,
+        boite(), `moins de 8 : ${descente}`])])]);
+}
+function libelleReponse(item) {
+  const k = item.reponse - 1;
+  switch (item.type) {
+    case "choix-images": return `n° ${item.reponse} — ${C.images[item.options[k]].fr}`;
+    case "choix-couleurs": return `n° ${item.reponse} — ${item.libelles[k]}`;
+    case "choix-icones": return `n° ${item.reponse} — ${window.LIBELLES_ICONES[item.options[k]]}`;
+    case "intrus": return `n° ${item.reponse} — ${C.sons[item.sons[k]]}`;
+    case "vrai-faux": return item.options[k] === "vrai" ? "Vrai" : "Faux";
+    case "choix":
+    case "choix-fr":
+    case "lettre-surlignee": return `n° ${item.reponse} — ${item.options[k]}`;
+    default: return item.accepte ? item.accepte.join(" ou ") : item.reponse;
+  }
+}
+
+function sonJoue(item) {
+  if (item.sons) return ar(item.sons.map((s) => C.sons[s]).join(" · "));
+  return item.son ? ar(C.sons[item.son]) : "—";
+}
+
+function fiche(livret) {
+  document.documentElement.style.setProperty("--accent", livret.couleur);
+  document.title = `Livret ${livret.numero} - fiche enseignante`;
+  const suite = livret.numero === 5 ? "niveau A2 atteint" : `Livret ${livret.numero + 1} à une séance suivante`;
+  const descente = livret.numero === 1 ? "orientation Année 1"
+    : `Livret ${livret.numero - 1} à une séance suivante (s'il n'a pas déjà été passé)`;
+  page([
+    el("div", "entete", [el("h1", "", `Livret ${livret.numero} — fiche enseignante`),
+      el("div", "petit", `Acquis de l'Année ${livret.annee}`)]),
+    el("h2", "", "Avant la séance"),
+    el("ul", "", [`Ouvrir Accueil.html, puis « Livret ${livret.numero} ».`,
+      "Tester le son : touche C sur l'écran d'accueil du livret.",
+      "Passer en plein écran : touche F.",
+      "Distribuer une feuille de réponses par élève."].map((t) => el("li", "", t))),
+    el("h2", "", "Déroulé"),
+    el("p", "note", "→ écran suivant · Espace : son de l'item, joué deux fois · C : consigne. Laisser 20 à 40 secondes par item ; ne pas aider."),
+    tableau(["N°", "Partie", "Consigne (touche C)", "Son (Espace)"],
+      livret.items.map((i) => [String(numeroItem(i)), nomPartie(i.partie), C.consignes[i.consigne], sonJoue(i)]))]);
+  page([
+    el("h2", "", "Corrigé et tolérances"),
+    tableau(["N°", "Réponse attendue", "Tolérance", "Référentiel"],
+      livret.items.map((i) => [String(numeroItem(i)), mixte(libelleReponse(i)),
+        i.tolerance || "Une seule réponse entourée.", mixte(i.source)])),
+    el("h2", "", "Décision (cascade)"),
+    tableau([`Score au Livret ${livret.numero}`, "Suite"], [
+      ["12 à 16 / 16", suite],
+      ["8 à 11 / 16", `Orientation en Année ${livret.annee} (11/16 : « proche du niveau supérieur », réévaluer après 3 séances)`],
+      ["0 à 7 / 16", descente]]),
+    el("p", "note", "Reporter les 4 sous-scores sur la fiche de synthèse. Écart de 3 points ou plus entre deux sous-scores : « profil déséquilibré ».")]);
+}
+
+function entretien() {
+  document.title = "Fiche entretien";
+  const e = C.entretien;
+  page([
+    el("div", "entete", [el("h1", "", "Fiche d'entretien individuel"), el("div", "petit", C.meta.etablissement)]),
+    el("div", "champs", ["Nom", "Prénom", "Âge", "Date"].map((c) => el("div", "champ", c))),
+    el("h2", "", "P1 à P8 — 1 point par réponse adaptée en arabe"),
+    tableau(["N°", "L'enseignante dit", "Prononciation", "Attendu", "Point"],
+      e.items.map((i) => [i.id, ar(i.dit), i.tr, mixte(i.attendu), boite()])),
+    el("p", "", [el("b", "", "Total : …… / 8"), " — 6 ou plus : un livret ; moins de 6 : orientation Année 1."]),
+    el("h2", "", "P9 — « Répète après moi » (hors total)"),
+    tableau(["Mot", "Son visé", "Juste", "Approché", "Absent"],
+      e.prononciation.map((p) => [ar(p.mot), ar(p.son), boite(), boite(), boite()])),
+    el("h2", "", "Appréciations de l'enseignante"),
+    tableau(["", "Acquis", "En cours", "Non acquis"], [
+      ["Prononciation (4 / 2-3 / 0-1 sons justes)", boite(), boite(), boite()],
+      ["Aisance à l'oral (spontanée / hésitante / absente)", boite(), boite(), boite()]]),
+    el("h2", "", "Repérage — seulement si total < 6 (l'élève lit à l'écran)"),
+    tableau(["R1", "R2", "R3", "Profil"], [[
+      el("span", "", [ar(e.reperage[0]), " ", boite()]),
+      el("span", "", [ar(e.reperage[1]), " ", boite()]),
+      el("span", "", [ar(e.reperage[2]), " ", boite()]),
+      "2 ou 3 lus : décodeur · 0 ou 1 : grand débutant"]]),
+    el("h2", "", "Parcours et livret de départ"),
+    el("p", "", "Années d'arabe déjà faites : ……      Sait lire l'arabe : oui / non"),
+    el("p", "", [1, 2, 3, 4, 5].flatMap((n) => [boite(), `Livret ${n}     `]).concat([boite(), "Année 1 directement (total < 6)"])),
+    el("p", "note", "Livret de départ = années d'arabe déjà faites (0 ou 1 an → Livret 1 ; 5 ans ou plus → Livret 5).")]);
+}
+
+function synthese() {
+  document.title = "Fiche synthese classe";
+  document.documentElement.classList.add("paysage");
+  document.head.append(el("style", "", "@page { size: A4 landscape; margin: 10mm; }"));
+  const entetes = ["Nom", "Âge", "Années d'arabe", "Entretien /8", "Prononc.", "Aisance",
+    "Livrets passés : score /16 (Lang. · Écr. · Lect. · Éc.)", "Orientation", "Profil", "Mentions", "Remarques"];
+  page([
+    el("div", "entete", [el("h1", "", "Fiche de synthèse de classe"), el("div", "petit", C.meta.etablissement)]),
+    tableau(entetes, Array.from({ length: 14 }, () => entetes.map(() => "\u00a0"))),
+    el("p", "note", "Tri conseillé : année d'orientation → âge → profil. Mentions : proche du niveau supérieur · profil déséquilibré · groupe à rythme adapté conseillé.")],
+  "synthese");
+}
+function guide() {
+  document.title = "Guide general";
+  const ent = C.entretien;
+  page([
+    el("div", "entete", [el("div", "", [el("h1", "", "Guide de l'enseignante"),
+      el("div", "rappel", "Livrets de positionnement — Arabe Fusha — Années 1 à 5")]),
+      el("div", "petit", [C.meta.etablissement, el("br"), `Conception : ${C.meta.conception}`])]),
+    el("h2", "", "1. À quoi servent les livrets"),
+    el("p", "", "Placer chaque nouvel élève dans l'année (1 à 5) qui correspond à ses acquis réels, repérer son profil (grand débutant, décodeur, oralisant) et ses points forts ou fragiles, pour former des groupes homogènes. Public : enfants et adolescents de 6 à 15 ans, francophones, non arabophones. Tout le contenu vient des 5 référentiels de l'association ; l'arabe est entièrement vocalisé."),
+    el("p", "", "C'est l'enseignante qui fait passer le test et qui évalue seule l'oral. Le livret numérique n'écoute, n'enregistre et ne note aucun élève."),
+    el("h2", "", "2. Matériel"),
+    el("ul", "", [
+      "Un ordinateur avec Google Chrome ou Microsoft Edge, un vidéoprojecteur et des enceintes.",
+      "Le dossier « Livret-Positionnement » : ouvrir Accueil.html. Aucune connexion internet n'est nécessaire.",
+      "Imprimés : une fiche d'entretien et une feuille de réponses par élève, la fiche enseignante du livret, la fiche de synthèse.",
+      "Des crayons."].map((t) => el("li", "", t))),
+    el("h2", "", "3. Déroulé en trois étapes"),
+    tableau(["Étape", "Qui", "Durée", "Support"], [
+      ["1. Entretien individuel", "l'enseignante et un élève", "≈ 4 min", "écran « Entretien » + fiche d'entretien"],
+      ["2. Séance de livret", "un petit groupe de même livret", "≈ 15 min", "livret projeté + feuilles de réponses"],
+      ["3. Correction et suite", "l'enseignante", "≈ 2 min par copie", "fiche enseignante du livret"]]),
+    el("h2", "", "4. L'entretien individuel"),
+    el("p", "", "L'enseignante pose les questions de vive voix. Pour P4, elle montre l'écran « Entretien » (3 images). 1 point par réponse adaptée en arabe, même imparfaite ; 0 si l'élève ne répond pas, répond en français ou hors sujet."),
+    tableau(["N°", "L'enseignante dit", "Prononciation", "Attendu"],
+      ent.items.map((i) => [i.id, ar(i.dit), i.tr, mixte(i.attendu)])),
+    el("p", "", ["P9 « Répète après moi » (hors total) : "].concat(ent.prononciation.map((p) => ar(p.mot + " ")),
+      [" — pour chaque mot : son juste, approché ou absent. Prononciation : Acquis (4 justes), En cours (2-3), Non acquis (0-1). Aisance : réponses spontanées, hésitantes ou absentes."])),
+    el("p", "", ["Total ≥ 6/8 : l'élève passe un livret. Total < 6/8 : orientation en Année 1 ; l'élève lit alors à l'écran "]
+      .concat(ent.reperage.map((r) => ar(r + " ")), ["— 2 ou 3 lus : profil « décodeur », sinon « grand débutant »."])),
+    tableau(["Années d'arabe déjà faites", "0 ou 1", "2", "3", "4", "5 ou plus"],
+      [["Livret de départ", "Livret 1", "Livret 2", "Livret 3", "Livret 4", "Livret 5"]])]);
+  page([
+    el("h2", "", "5. La séance de livret"),
+    el("ul", "", [
+      "Ouvrir Accueil.html et choisir le livret ; passer en plein écran avec la touche F.",
+      "Avancer avec → (ou la télécommande de présentation) ; revenir avec ←.",
+      "Sur chaque écran : touche C pour la consigne, Espace pour le son de l'item (joué deux fois automatiquement).",
+      "Laisser 20 à 40 secondes par item. Ne pas aider et ne pas traduire.",
+      "Les élèves répondent sur leur feuille ; s'ils ne savent pas, ils laissent vide.",
+      "On peut arrêter la séance si plus aucun élève ne répond."].map((t) => el("li", "", t))),
+    el("h2", "", "6. Correction et cascade"),
+    el("p", "", "1 point par item, pas de demi-point ; plusieurs réponses entourées = 0. Les tolérances de chaque item figurent sur la fiche enseignante du livret ; à l'écrit, les voyelles ne sont jamais exigées, sauf à l'item 1-08."),
+    tableau(["Score au Livret N", "Suite"], [
+      ["12 à 16", "Livret N+1 à une séance suivante (Livret 5 réussi : niveau A2 atteint)"],
+      ["8 à 11", "Orientation en Année N (11 : « proche du niveau supérieur », réévaluer après 3 séances)"],
+      ["0 à 7", "Livret N-1 à une séance suivante s'il n'a pas déjà été passé ; au Livret 1 : orientation Année 1"]]),
+    el("p", "", "Après une descente, on ne remonte jamais vers un livret déjà échoué : si le livret inférieur est réussi, l'élève est orienté dans l'année du livret échoué."),
+    el("h3", "", "Exemples"),
+    el("ul", "", [
+      "Inès, 9 ans, 2 ans d'arabe : entretien 7/8 → Livret 2 : 13/16 (réussi) → Livret 3 : 9/16 → orientation Année 3.",
+      "Yanis, 12 ans, 3 ans d'arabe : entretien 6/8 → Livret 3 : 6/16 → Livret 2 : 12/16 (réussi) → orientation Année 3.",
+      "Sami, 7 ans, sans arabe : entretien 3/8, lit 2 syllabes sur 3 → orientation Année 1, profil « décodeur ».",
+      "Lina, 14 ans, orientée en Année 2 : 14 ans ≥ 11 → « groupe à rythme adapté conseillé »."].map((t) => el("li", "", t))),
+    el("h2", "", "7. Profils et âge"),
+    tableau(["Profil", "Règle"], [
+      ["Grand débutant", "entretien < 6/8 et repérage < 2/3"],
+      ["Décodeur", "entretien < 6/8 et repérage ≥ 2/3 : lit l'arabe sans le comprendre encore"],
+      ["Oralisant", "entretien ≥ 6/8 et, au Livret 1, Écoute ≥ 3/4 avec Langue + Lecture ≤ 3/8 : comprend sans lire"],
+      ["Standard", "tous les autres cas"]]),
+    tableau(["Année d'orientation", "Âge de référence", "« Rythme adapté conseillé » dès"], [
+      ["Année 1", "6-8 ans", "11 ans"], ["Année 2", "7-8 ans", "11 ans"], ["Année 3", "8-9 ans", "12 ans"],
+      ["Année 4", "9-10 ans", "13 ans"], ["Année 5", "10-11 ans", "14 ans"]]),
+    el("p", "note", "Un écart de 3 points ou plus entre deux sous-scores d'un livret est noté « profil déséquilibré » : c'est une piste de remédiation, sans effet sur l'orientation.")]);
+  page([
+    el("h2", "", "8. Traçabilité : chaque item et sa source dans les référentiels"),
+    ...C.livrets.map((l) => el("div", "", [el("h3", "", `Livret ${l.numero} — Année ${l.annee}`),
+      tableau(["N°", "Partie", "Référentiel"], l.items.map((i) => [i.id, nomPartie(i.partie), mixte(i.source)]))]))]);
+}
+
+const DOCUMENTS = {
+  feuille: () => feuille(trouverLivret(numeroDemande)),
+  fiche: () => fiche(trouverLivret(numeroDemande)),
+  guide,
+  entretien,
+  synthese,
+};
+(DOCUMENTS[typeDoc] || guide)();
+</script>
+</body>
+</html>

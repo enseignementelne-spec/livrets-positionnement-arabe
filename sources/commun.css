@@ -1,0 +1,33 @@
+@import url("medias/polices/polices.css");
+
+:root {
+  --encre: #1d2b33;
+  --encre-douce: #51616b;
+  --fond: #faf8f5;
+  --carte: #ffffff;
+  --trait: #e3ddd3;
+  --primaire: #1a4d5c;
+  --primaire-2: #2d7d8a;
+  --or: #d4a853;
+  --corail: #d0492c;
+  --livret-1: #2d7d8a;
+  --livret-2: #a8731a;
+  --livret-3: #b94a32;
+  --livret-4: #4a55a2;
+  --livret-5: #2e7d4f;
+  --police-ar: "Noto Naskh Arabic", "Amiri", "Traditional Arabic", serif;
+  --police-ar-titre: "Amiri", "Noto Naskh Arabic", serif;
+  --police-fr: "Source Sans 3", "Segoe UI", sans-serif;
+  --police-titre: "Playfair Display", Georgia, serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: var(--police-fr); color: var(--encre); background: var(--fond); }
+.ar { font-family: var(--police-ar); direction: rtl; unicode-bidi: isolate; line-height: 1.9; }
+.surligne {
+  color: var(--corail);
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.35em;
+}

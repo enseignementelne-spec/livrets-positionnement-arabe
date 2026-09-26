@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Livret de positionnement — projection</title>
+<link rel="stylesheet" href="commun.css">
+<style>
+  html, body { height: 100%; overflow: hidden; background: #10262e; }
+  #scene {
+    --accent: var(--or);
+    position: fixed; left: 50%; top: 50%; width: 1600px; height: 900px;
+    transform: translate(-50%, -50%); transform-origin: center center;
+    background: var(--fond); display: grid; grid-template-rows: 96px 1fr 56px; overflow: hidden;
+  }
+  kbd { font: 600 16px var(--police-fr); border: 1px solid currentColor; border-radius: 6px; padding: 1px 8px; opacity: .7; }
+  .bandeau { display: flex; align-items: center; gap: 28px; padding: 0 40px; background: var(--primaire);
+             color: #fff; border-bottom: 8px solid var(--accent); }
+  .bandeau .livret { font: 700 34px var(--police-titre); }
+  .bandeau .annee { font-size: 22px; opacity: .85; }
+  .parties { display: flex; gap: 26px; margin-inline-start: auto; font-size: 20px; }
+  .parties > span { display: flex; align-items: center; gap: 8px; opacity: .55; }
+  .parties > span.active { opacity: 1; font-weight: 700; }
+  .points { display: inline-flex; gap: 4px; }
+  .points i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.3); }
+  .points i.fait { background: #fff; }
+  .corps { position: relative; padding: 24px 56px 16px; display: flex; flex-direction: column; gap: 20px; min-height: 0; }
+  .consigne { display: flex; align-items: center; gap: 16px; font-size: 28px; padding-inline-start: 120px; min-height: 64px; }
+  .btn-consigne, .btn-ecouter, .nav { cursor: pointer; border: none; font-family: var(--police-fr); }
+  .btn-consigne { width: 52px; height: 52px; border-radius: 50%; background: var(--carte); color: var(--primaire);
+                  box-shadow: 0 2px 10px rgba(26,77,92,.18); flex: none; display: grid; place-items: center; }
+  .btn-consigne svg { width: 28px; height: 28px; }
+  .badge-item { position: absolute; left: 40px; top: 20px; width: 96px; height: 96px; border-radius: 24px;
+                background: var(--accent); color: #fff; display: grid; place-items: center; line-height: 1; }
+  .badge-item span { font-size: 18px; opacity: .85; }
+  .badge-item b { font: 700 48px var(--police-titre); }
+  .principal { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; }
+  .principal.avec-image { display: grid; grid-template-columns: 400px 1fr; gap: 48px; align-items: center; justify-items: center; }
+  .colonne { display: flex; flex-direction: column; align-items: center; gap: 24px; width: 100%; }
+  .illu-cadre { background: var(--carte); border-radius: 28px; padding: 16px; box-shadow: 0 6px 24px rgba(26,77,92,.12); }
+  .illu-cadre .illu { width: 360px; height: 360px; }
+  .illu { display: block; object-fit: contain; }
+  .tete { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+  .fr-grand { font: italic 600 40px var(--police-fr); color: var(--primaire); }
+  .question { font: 600 34px var(--police-fr); }
+  .enonce { font-size: 88px; color: var(--primaire); }
+  .indice { font-size: 48px; color: var(--encre-douce); }
+  .mot-surligne { font-size: 180px; line-height: 1.6; color: var(--primaire); }
+  .mots { display: flex; gap: 28px; direction: rtl; }
+  .puce { font-size: 64px; background: var(--carte); border: 3px solid var(--trait); border-radius: 20px; padding: 4px 30px; }
+  .puce-num { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .case-num { width: 72px; height: 72px; border: 4px dashed var(--encre-douce); border-radius: 14px; }
+  .options { display: flex; gap: 36px; justify-content: center; }
+  .options.verticales { flex-direction: column; gap: 18px; align-items: stretch; min-width: 900px; }
+  .option { position: relative; background: var(--carte); border: 4px solid var(--trait); border-radius: 26px;
+            padding: 18px 40px; min-width: 200px; display: flex; align-items: center; justify-content: center;
+            gap: 20px; box-shadow: 0 4px 16px rgba(26,77,92,.08); transition: transform .2s, border-color .2s; }
+  .options.verticales .option { justify-content: flex-start; padding-inline-start: 96px; }
+  .option .num { position: absolute; left: -18px; top: -18px; width: 56px; height: 56px; border-radius: 50%;
+                 background: var(--primaire); color: #fff; font: 700 30px var(--police-fr); display: grid; place-items: center; }
+  .options.verticales .option .num { left: 22px; top: 50%; transform: translateY(-50%); }
+  .options.images .option { padding: 14px; }
+  .options.images .illu { width: 300px; height: 300px; }
+  .opt-ar.tres-grand { font-size: 150px; line-height: 1.5; }
+  .opt-ar.grand { font-size: 90px; }
+  .opt-ar.long { font-size: 54px; }
+  .opt-fr { font: 600 38px var(--police-fr); }
+  .pastille { width: 220px; height: 220px; border-radius: 50%; box-shadow: inset 0 0 0 6px rgba(0,0,0,.08); }
+  .icone { display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--primaire); }
+  .icone svg { width: 200px; height: 200px; }
+  .icone .libelle { font: 600 30px var(--police-fr); color: var(--encre); }
+  .opt-num { font: 700 120px var(--police-titre); color: var(--primaire); padding: 0 30px; }
+  .option.allume { border-color: var(--accent); transform: scale(1.08); }
+  .btn-ecouter { align-self: center; display: flex; align-items: center; gap: 16px; padding: 16px 40px;
+                 border-radius: 999px; background: var(--accent); color: #fff; font-size: 32px; font-weight: 700;
+                 box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+  .btn-ecouter svg { width: 40px; height: 40px; }
+  .btn-ecouter kbd { color: #fff; }
+  .btn-ecouter.en-lecture { animation: pulsation 1s ease-in-out infinite; }
+  @keyframes pulsation { 50% { transform: scale(1.06); } }
+  .ecrire { font: 600 30px var(--police-fr); color: var(--encre-douce); }
+  .avec-texte { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 680px; gap: 40px; align-items: center; }
+  .texte-lecture { background: var(--carte); border-radius: 26px; padding: 28px 36px; font-size: 36px; line-height: 1.9;
+                   box-shadow: 0 6px 24px rgba(26,77,92,.12); border-inline-end: 10px solid var(--accent); }
+  .avec-texte .options.verticales { min-width: 0; }
+  .avec-texte .options.images .illu { width: 190px; height: 190px; }
+  .pied { display: flex; align-items: center; gap: 20px; padding: 0 28px; color: var(--encre-douce); font-size: 18px;
+          border-top: 1px solid var(--trait); }
+  .pied .aide { margin-inline-start: auto; }
+  .nav { width: 44px; height: 36px; border-radius: 10px; background: var(--carte); color: var(--primaire); font-size: 18px; }
+  .accueil { align-items: center; justify-content: center; text-align: center; gap: 28px; }
+  .titre-accueil { font: 700 110px var(--police-titre); color: var(--primaire); }
+  .sous-titre { font-size: 34px; color: var(--encre-douce); }
+  .chips { display: flex; gap: 16px; }
+  .chip { background: var(--carte); border: 3px solid var(--accent); border-radius: 999px; padding: 8px 26px; font-size: 26px; font-weight: 600; }
+  .accueil .consigne { padding-inline-start: 0; max-width: 1200px; }
+  .consigne-depart { font-size: 28px; color: var(--accent); font-weight: 700; }
+  .alerte { position: absolute; right: 24px; bottom: 72px; background: #9a3520; color: #fff; padding: 14px 22px;
+            border-radius: 12px; font-size: 22px; }
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<script src="contenu.js"></script>
+<script src="partage.js"></script>
+<script>
+"use strict";
+const C = window.CONTENU;
+const scene = document.getElementById("scene");
+const lecteur = { jeton: 0, audio: new Audio() };
+let ecrans = [];
+let index = 0;
+
+function ar(texte, classe) { return el("div", "ar " + (classe || ""), texte); }
+
+function svg(nom) {
+  const boite = document.createElement("span");
+  boite.innerHTML = window.ICONES[nom];
+  return boite.firstElementChild;
+}
+
+function alerte(message) {
+  const bulle = el("div", "alerte", message);
+  scene.append(bulle);
+  setTimeout(() => bulle.remove(), 4000);
+}
+
+function image(id) {
+  const img = el("img", "illu");
+  img.src = `medias/images/${id}.webp`;
+  img.alt = C.images[id].fr;
+  img.onerror = () => alerte(`Image introuvable : ${id}.webp`);
+  return img;
+}
+
+function carte(numero, contenu) {
+  return el("div", "option", [el("span", "num", String(numero))].concat(contenu));
+}
+
+function longueur(texte) { return texte.replace(/[\u064B-\u0652\u0670\u0640\s]/g, "").length; }
+
+function icone(nom) {
+  const bloc = el("div", "icone");
+  bloc.innerHTML = window.ICONES[nom];
+  bloc.append(el("div", "libelle", window.LIBELLES_ICONES[nom]));
+  return bloc;
+}
+
+function tete(item) {
+  const bloc = el("div", "tete");
+  if (item.fr) bloc.append(el("div", "fr-grand", item.fr));
+  if (item.surligne) bloc.append(motSurligne(item.surligne, "mot-surligne"));
+  if (item.enonce) bloc.append(ar(item.enonce, "enonce"));
+  if (item.indice) bloc.append(ar(item.indice, "indice"));
+  if (item.mots) bloc.append(el("div", "mots", item.mots.map((m) => ar(m, "puce"))));
+  if (item.question) bloc.append(el("div", "question", item.question));
+  return bloc;
+}
+
+function options(item, fabrique, classe) {
+  return el("div", "options " + (classe || ""), item.options.map((o, i) => carte(i + 1, fabrique(o))));
+}
+
+const RENDUS = {
+  "choix": (item) => {
+    const long = item.options.some((o) => longueur(o) > 6);
+    const taille = item.options.every((o) => longueur(o) <= 2) ? "tres-grand" : long ? "long" : "grand";
+    return [tete(item), options(item, (o) => ar(o, "opt-ar " + taille), long ? "verticales" : "")];
+  },
+  "lettre-surlignee": (item) => [tete(item), options(item, (o) => ar(o, "opt-ar tres-grand"))],
+  "choix-images": (item) => [tete(item), options(item, image, "images")],
+  "choix-couleurs": (item) => [tete(item), options(item, (couleur) => {
+    const pastille = el("div", "pastille");
+    pastille.style.background = couleur;
+    return pastille;
+  })],
+  "choix-fr": (item) => [tete(item), options(item, (o) => el("div", "opt-fr", o), "verticales")],
+  "vrai-faux": (item) => [tete(item), options(item, (o) => el("div", "opt-fr", o === "vrai" ? "Vrai" : "Faux"))],
+  "choix-icones": (item) => [tete(item), options(item, icone)],
+  "ecrire": (item) => [tete(item), el("div", "ecrire", "✏️ Écris ta réponse sur ta feuille.")],
+  "chiffres": () => [el("div", "ecrire", "✏️ Écris le nombre en chiffres sur ta feuille.")],
+  "racine": (item) => [tete(item), el("div", "ecrire", "✏️ Écris les 3 lettres de la racine sur ta feuille.")],
+  "numeroter": (item) => [
+    el("div", "mots", item.mots.map((m) => el("div", "puce-num", [ar(m, "puce"), el("div", "case-num")]))),
+    el("div", "ecrire", "✏️ Écris 1, 2 ou 3 sous chaque mot, sur ta feuille.")],
+  "intrus": (item) => [options(item, (o) => el("div", "opt-num", o))],
+};
+
+function points(rangPartie, numero) {
+  const conteneur = el("span", "points");
+  for (let j = 1; j <= 4; j += 1) conteneur.append(el("i", rangPartie * 4 + j <= numero ? "fait" : ""));
+  return conteneur;
+}
+
+function bandeau(titre, sousTitre, partieActive, numero) {
+  const enfants = [el("div", "livret", titre), el("div", "annee", sousTitre)];
+  if (partieActive !== undefined) {
+    enfants.push(el("div", "parties", C.parties.map((p, k) =>
+      el("span", p.id === partieActive ? "active" : "", [p.nom, points(k, numero)]))));
+  }
+  return el("header", "bandeau", enfants);
+}
+
+function barreConsigne(id) {
+  const bouton = el("button", "btn-consigne", [svg("haut_parleur")]);
+  bouton.title = "Consigne (touche C)";
+  bouton.onclick = () => jouer([`fr-${id}`], 1);
+  return el("div", "consigne", [bouton, el("span", "", C.consignes[id]), el("kbd", "", "C")]);
+}
+
+function boutonEcouter() {
+  const bouton = el("button", "btn-ecouter", [svg("haut_parleur"), el("span", "", "Écouter"), el("kbd", "", "Espace")]);
+  bouton.onclick = jouerItem;
+  return bouton;
+}
+
+function pied() {
+  const precedent = el("button", "nav", "◀");
+  precedent.title = "Écran précédent (←)";
+  precedent.onclick = () => aller(index - 1);
+  const suivant = el("button", "nav", "▶");
+  suivant.title = "Écran suivant (→)";
+  suivant.onclick = () => aller(index + 1);
+  return el("footer", "pied", [precedent, suivant,
+    el("span", "aide", "← → écrans · Espace : écouter · C : consigne · F : plein écran"),
+    el("span", "", `${index + 1} / ${ecrans.length}`)]);
+}
+
+function ecranAccueil(livret) {
+  return [bandeau(`Livret ${livret.numero}`, `Acquis de l'Année ${livret.annee}`, "", 0),
+    el("div", "corps accueil", [
+      el("div", "titre-accueil", `Livret ${livret.numero}`),
+      el("div", "sous-titre", `Acquis de l'Année ${livret.annee} · 16 questions · 4 parties`),
+      el("div", "chips", C.parties.map((p) => el("span", "chip", p.nom))),
+      barreConsigne("c-accueil"),
+      el("div", "consigne-depart", "Appuyez sur → pour commencer")]),
+    pied()];
+}
+
+function ecranItem(livret, item) {
+  const numero = Number(item.id.split("-")[1]);
+  const contenu = RENDUS[item.type](item);
+  const principal = item.image
+    ? el("div", "principal avec-image", [el("div", "illu-cadre", image(item.image)), el("div", "colonne", contenu)])
+    : el("div", "principal", contenu);
+  const corps = el("div", "corps", [barreConsigne(item.consigne)]);
+  if (item.texte) corps.append(el("div", "avec-texte", [principal, ar(livret.textes[item.texte], "texte-lecture")]));
+  else corps.append(principal);
+  if (item.son || item.sons) corps.append(boutonEcouter());
+  corps.append(el("div", "badge-item", [el("span", "", "N°"), el("b", "", String(numero))]));
+  return [bandeau(`Livret ${livret.numero}`, `Acquis de l'Année ${livret.annee}`, item.partie, numero), corps, pied()];
+}
+
+function ecranFin(livret) {
+  return [bandeau(`Livret ${livret.numero}`, `Acquis de l'Année ${livret.annee}`, "", 16),
+    el("div", "corps accueil", [el("div", "titre-accueil", "C'est terminé !"),
+      el("div", "sous-titre", "Bravo. Pose ton crayon."), barreConsigne("c-fin")]),
+    pied()];
+}
+
+function ecransEntretien() {
+  const e = C.entretien;
+  const enTete = () => bandeau("Entretien individuel", "Écran à montrer à l'élève");
+  return [
+    { rendre: () => [enTete(), el("div", "corps accueil", [el("div", "titre-accueil", "Entretien"),
+      el("div", "sous-titre", "P4 : l'élève montre une image · Repérage : l'élève lit à voix haute"),
+      el("div", "consigne-depart", "Appuyez sur →")]), pied()] },
+    { rendre: () => [enTete(), el("div", "corps", [el("div", "principal",
+      [el("div", "options images", e.p4_images.map((id, i) => carte(i + 1, image(id))))])]), pied()] },
+    { rendre: () => [enTete(), el("div", "corps", [el("div", "principal",
+      [el("div", "options", e.reperage.map((r, i) => carte(`R${i + 1}`, ar(r, "opt-ar tres-grand"))))])]), pied()] },
+  ];
+}
+
+function allumer(rang) {
+  document.querySelectorAll(".options .option").forEach((o, k) => o.classList.toggle("allume", k === rang));
+}
+
+function arreter() {
+  lecteur.jeton += 1;
+  lecteur.audio.pause();
+  document.querySelectorAll(".btn-ecouter").forEach((b) => b.classList.remove("en-lecture"));
+  allumer(-1);
+}
+
+function pause(ms, jeton) {
+  return new Promise((ok) => setTimeout(() => ok(jeton === lecteur.jeton), ms));
+}
+
+function jouerFichier(id, jeton) {
+  return new Promise((ok) => {
+    const audio = lecteur.audio;
+    audio.onended = () => ok(jeton === lecteur.jeton);
+    audio.onerror = () => { alerte(`Son introuvable : ${id}.mp3`); ok(false); };
+    audio.src = `medias/audio/${id}.mp3`;
+    audio.play().catch(() => ok(false));
+  });
+}
+
+async function jouer(ids, fois) {
+  arreter();
+  const jeton = lecteur.jeton;
+  document.querySelectorAll(".btn-ecouter").forEach((b) => b.classList.add("en-lecture"));
+  for (let tour = 0; tour < fois; tour += 1) {
+    for (let i = 0; i < ids.length; i += 1) {
+      if (ids.length > 1) allumer(i);
+      if (!(await jouerFichier(ids[i], jeton))) return;
+      if (ids.length > 1) allumer(-1);
+      if (i < ids.length - 1 && !(await pause(700, jeton))) return;
+    }
+    if (tour < fois - 1 && !(await pause(1500, jeton))) return;
+  }
+  if (jeton === lecteur.jeton) arreter();
+}
+
+function jouerItem() {
+  const item = ecrans[index].item;
+  if (item && item.sons) jouer(item.sons, 2);
+  else if (item && item.son) jouer([item.son], 2);
+}
+
+function jouerConsigne() {
+  const id = ecrans[index].consigne;
+  if (id) jouer([`fr-${id}`], 1);
+}
+
+function afficher() {
+  arreter();
+  scene.replaceChildren(...ecrans[index].rendre());
+}
+
+function aller(rang) {
+  const cible = Math.max(0, Math.min(ecrans.length - 1, rang));
+  if (cible !== index) { index = cible; afficher(); }
+}
+
+function pleinEcran() {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(() => alerte("Plein écran refusé par le navigateur"));
+}
+
+document.addEventListener("keydown", (evenement) => {
+  const touche = evenement.key;
+  if (["ArrowRight", "PageDown", "ArrowDown"].includes(touche)) { evenement.preventDefault(); aller(index + 1); }
+  else if (["ArrowLeft", "PageUp", "ArrowUp"].includes(touche)) { evenement.preventDefault(); aller(index - 1); }
+  else if (touche === " " || touche === "Enter") { evenement.preventDefault(); jouerItem(); }
+  else if (touche === "c" || touche === "C") { jouerConsigne(); }
+  else if (touche === "f" || touche === "F") { pleinEcran(); }
+  else if (touche === "Home") { evenement.preventDefault(); aller(0); }
+});
+
+function ajuster() {
+  const echelle = Math.min(innerWidth / 1600, innerHeight / 900);
+  scene.style.transform = `translate(-50%, -50%) scale(${echelle})`;
+}
+
+function demarrer() {
+  const correspondance = location.hash.match(/^#livret-([1-5])$/);
+  if (correspondance) {
+    const livret = C.livrets.find((l) => l.numero === Number(correspondance[1]));
+    scene.style.setProperty("--accent", livret.couleur);
+    document.title = `Livret ${livret.numero} — projection`;
+    ecrans = [{ rendre: () => ecranAccueil(livret), consigne: "c-accueil" }]
+      .concat(livret.items.map((item) => ({ rendre: () => ecranItem(livret, item), consigne: item.consigne, item })))
+      .concat([{ rendre: () => ecranFin(livret), consigne: "c-fin" }]);
+  } else if (location.hash === "#entretien") {
+    scene.style.setProperty("--accent", "var(--or)");
+    document.title = "Entretien — projection";
+    ecrans = ecransEntretien();
+  } else {
+    ecrans = [{ rendre: () => [bandeau("Livrets de positionnement", "Arabe Fusha"),
+      el("div", "corps accueil", [el("div", "sous-titre", "Ouvrez un livret depuis Accueil.html")]), pied()] }];
+  }
+  index = 0;
+  afficher();
+}
+
+window.projection = {
+  total: () => ecrans.length,
+  index: () => index,
+  enLecture: () => !lecteur.audio.paused && !lecteur.audio.ended,
+  jeton: () => lecteur.jeton,
+};
+
+addEventListener("resize", ajuster);
+addEventListener("hashchange", demarrer);
+ajuster();
+demarrer();
+</script>
+</body>
+</html>
