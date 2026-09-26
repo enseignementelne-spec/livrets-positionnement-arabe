@@ -97,6 +97,15 @@
   .consigne-depart { font-size: 28px; color: var(--accent); font-weight: 700; }
   .alerte { position: absolute; right: 24px; bottom: 72px; background: #9a3520; color: #fff; padding: 14px 22px;
             border-radius: 12px; font-size: 22px; }
+  .grille-lettres { display: grid; grid-template-columns: repeat(7, 1fr); gap: 14px; direction: rtl; width: 100%; }
+  .case-lettre { background: var(--carte); border: 3px solid var(--trait); border-radius: 16px;
+                 display: grid; place-items: center; height: 140px; box-shadow: 0 4px 16px rgba(26,77,92,.08); }
+  .case-lettre .ar { font-size: 84px; line-height: 1; }
+  .grille-nombres { display: flex; flex-wrap: wrap; direction: rtl; justify-content: center; gap: 16px; width: 100%; }
+  .case-nombre { background: var(--carte); border: 3px solid var(--trait); border-radius: 16px;
+                 width: 190px; height: 190px; display: grid; place-items: center;
+                 font: 700 96px var(--police-titre); color: var(--primaire);
+                 box-shadow: 0 4px 16px rgba(26,77,92,.08); }
 </style>
 </head>
 <body>
@@ -263,12 +272,23 @@ function ecransEntretien() {
   const enTete = () => bandeau("Entretien individuel", "Écran à montrer à l'élève");
   return [
     { rendre: () => [enTete(), el("div", "corps accueil", [el("div", "titre-accueil", "Entretien"),
-      el("div", "sous-titre", "P4 : l'élève montre une image · Repérage : l'élève lit à voix haute"),
+      el("div", "sous-titre",
+        "P4 : l'élève montre une image · Repérage : l'élève lit à voix haute · Alphabet et nombres : l'élève nomme à voix haute"),
       el("div", "consigne-depart", "Appuyez sur →")]), pied()] },
     { rendre: () => [enTete(), el("div", "corps", [el("div", "principal",
       [el("div", "options images", e.p4_images.map((id, i) => carte(i + 1, image(id))))])]), pied()] },
     { rendre: () => [enTete(), el("div", "corps", [el("div", "principal",
       [el("div", "options", e.reperage.map((r, i) => carte(`R${i + 1}`, ar(r, "opt-ar tres-grand"))))])]), pied()] },
+    { rendre: () => [enTete(), el("div", "corps", [el("div", "principal",
+      [el("div", "question", "Nomme chaque lettre"),
+       el("div", "grille-lettres", e.alphabet.map((l) => el("div", "case-lettre", ar(l.lettre))))])]), pied()] },
+    { rendre: () => [enTete(), el("div", "corps", [el("div", "principal",
+      [el("div", "question", "Nomme chaque nombre"), el("div", "indice", "1 à 10"),
+       el("div", "grille-nombres", e.nombres.un_a_dix.map((n) => el("div", "case-nombre", String(n.n))))])]), pied()] },
+    { rendre: () => [enTete(), el("div", "corps", [el("div", "principal",
+      [el("div", "question", "Nomme chaque nombre"), el("div", "indice", "0 et 11 à 20"),
+       el("div", "grille-nombres",
+         e.nombres.zero_et_onze_a_vingt.map((n) => el("div", "case-nombre", String(n.n))))])]), pied()] },
   ];
 }
 

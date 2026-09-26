@@ -5,7 +5,11 @@ window.CONTENU = {
   "etablissement": "Association de la Fraternité d'Elne / Lycée Alfred Sauvy",
   "conception": "M. KADDOURI / Y. NAJIH",
   "annee_scolaire": "2026-2027",
-  "seuils": {"reussi": 12, "orientation": 8, "total": 16}
+  "seuils": {"reussi": 12, "orientation": 8, "total": 16},
+  "conditions": {
+    "1": {"lettres": 20, "nombres": 7, "plage": "1 à 10"},
+    "2": {"lettres": 28, "nombres": 21, "plage": "0 à 20"}
+  }
 },
 "parties": [
   {"id": "langue", "nom": "Langue"},
@@ -67,7 +71,32 @@ window.CONTENU = {
     {"mot": "حَلِيبٌ", "son": "ح"}, {"mot": "عَصِيرٌ", "son": "ع"},
     {"mot": "صَلَاةٌ", "son": "ص"}, {"mot": "قِطٌّ", "son": "ق"}
   ],
-  "reperage": ["بَ", "سِ", "قَلَمٌ"]
+  "reperage": ["بَ", "سِ", "قَلَمٌ"],
+  "alphabet": [
+    {"lettre": "ر", "nom": "رَاء"}, {"lettre": "ك", "nom": "كَاف"}, {"lettre": "ب", "nom": "بَاء"},
+    {"lettre": "ع", "nom": "عَيْن"}, {"lettre": "س", "nom": "سِين"}, {"lettre": "ذ", "nom": "ذَال"},
+    {"lettre": "ي", "nom": "يَاء"}, {"lettre": "ح", "nom": "حَاء"}, {"lettre": "ط", "nom": "طَاء"},
+    {"lettre": "ل", "nom": "لَام"}, {"lettre": "ث", "nom": "ثَاء"}, {"lettre": "ف", "nom": "فَاء"},
+    {"lettre": "ج", "nom": "جِيم"}, {"lettre": "ش", "nom": "شِين"}, {"lettre": "ا", "nom": "أَلِف"},
+    {"lettre": "ق", "nom": "قَاف"}, {"lettre": "ض", "nom": "ضَاد"}, {"lettre": "ن", "nom": "نُون"},
+    {"lettre": "خ", "nom": "خَاء"}, {"lettre": "و", "nom": "وَاو"}, {"lettre": "ص", "nom": "صَاد"},
+    {"lettre": "ظ", "nom": "ظَاء"}, {"lettre": "م", "nom": "مِيم"}, {"lettre": "د", "nom": "دَال"},
+    {"lettre": "غ", "nom": "غَيْن"}, {"lettre": "ت", "nom": "تَاء"}, {"lettre": "ز", "nom": "زَاي"},
+    {"lettre": "ه", "nom": "هَاء"}
+  ],
+  "nombres": {
+    "un_a_dix": [
+      {"n": 7, "nom": "سَبْعَة"}, {"n": 2, "nom": "اِثْنَان"}, {"n": 10, "nom": "عَشَرَة"}, {"n": 4, "nom": "أَرْبَعَة"},
+      {"n": 1, "nom": "وَاحِد"}, {"n": 6, "nom": "سِتَّة"}, {"n": 9, "nom": "تِسْعَة"}, {"n": 3, "nom": "ثَلَاثَة"},
+      {"n": 8, "nom": "ثَمَانِيَة"}, {"n": 5, "nom": "خَمْسَة"}
+    ],
+    "zero_et_onze_a_vingt": [
+      {"n": 15, "nom": "خَمْسَةَ عَشَرَ"}, {"n": 0, "nom": "صِفْرٌ"}, {"n": 19, "nom": "تِسْعَةَ عَشَرَ"},
+      {"n": 12, "nom": "اِثْنَا عَشَرَ"}, {"n": 20, "nom": "عِشْرُون"}, {"n": 14, "nom": "أَرْبَعَةَ عَشَرَ"},
+      {"n": 17, "nom": "سَبْعَةَ عَشَرَ"}, {"n": 11, "nom": "أَحَدَ عَشَرَ"}, {"n": 18, "nom": "ثَمَانِيَةَ عَشَرَ"},
+      {"n": 13, "nom": "ثَلَاثَةَ عَشَرَ"}, {"n": 16, "nom": "سِتَّةَ عَشَرَ"}
+    ]
+  }
 },
 "livrets": [
 {

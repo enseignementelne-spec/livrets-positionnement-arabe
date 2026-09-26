@@ -62,6 +62,13 @@
   td .ar { font-size: 13pt; line-height: 1.4; }
   .synthese td { height: 9mm; }
   .note { font-size: 9.5pt; color: var(--encre-douce); }
+  .grille-case { direction: rtl; }
+  .grille-case td { text-align: center; vertical-align: top; padding: 0.6mm 1mm; }
+  .grille-case .ar { font-size: 13pt; line-height: 1.15; }
+  .grille-case .nom-petit { font-size: 6.5pt; color: var(--encre-douce); }
+  .grille-case .nom-petit .ar { font-size: 8pt; line-height: 1.1; }
+  .grille-case .chiffre-grand { font: 700 13pt var(--police-titre); color: var(--primaire); line-height: 1.1; }
+  .grille-case .boite { display: block; margin: 0.5mm auto 0; }
 </style>
 </head>
 <body>
@@ -92,6 +99,13 @@ function page(enfants, classe) {
 function tableau(entetes, lignes) {
   const corps = el("tbody", "", lignes.map((ligne) => el("tr", "", ligne.map((c) => el("td", "", c)))));
   return el("table", "", [el("thead", "", el("tr", "", entetes.map((h) => el("th", "", h)))), corps]);
+}
+
+function grille(items, parLigne, rendre) {
+  const lignes = [];
+  for (let i = 0; i < items.length; i += parLigne) lignes.push(items.slice(i, i + parLigne));
+  return el("table", "grille-case",
+    el("tbody", "", lignes.map((ligne) => el("tr", "", ligne.map((x) => el("td", "", rendre(x)))))));
 }
 
 function enonceAvecBlanc(texte) {
@@ -177,11 +191,24 @@ function blocPartie(livret, idPartie) {
   return bloc;
 }
 
+function conditionLivret(livret) {
+  return C.meta.conditions[String(livret.numero)];
+}
+
+function texteCondition(cond) {
+  const max = cond.plage === "1 à 10" ? 10 : 21;
+  const lettresTxt = cond.lettres >= 28 ? "28/28" : `${cond.lettres}/28 ou plus`;
+  const nombresTxt = cond.nombres >= max ? `${max}/${max}` : `${cond.nombres}/${max} ou plus`;
+  return `lettres ${lettresTxt} et nombres ${cond.plage} : ${nombresTxt}`;
+}
+
 function feuille(livret) {
   document.documentElement.style.setProperty("--accent", livret.couleur);
   document.title = `Livret ${livret.numero} - feuille eleve`;
   const suite = livret.numero === 5 ? "niveau A2 atteint" : `Livret ${livret.numero + 1}`;
   const descente = livret.numero === 1 ? "Année 1" : `Livret ${livret.numero - 1}`;
+  const cond = conditionLivret(livret);
+  const seuilTexte = cond ? "12 ou plus et conditions remplies" : "12 ou plus";
   page([
     el("div", "entete", [
       el("div", "", [el("h1", "", `Livret ${livret.numero} — ma feuille de réponses`),
@@ -197,8 +224,13 @@ function feuille(livret) {
     el("div", "enseignante", [
       el("b", "", "Réservé à l'enseignante"),
       el("div", "scores", ["Langue …/4", "Écrit …/4", "Lecture …/4", "Écoute …/4", "Total …/16"].map((s) => el("b", "", s))),
-      el("div", "", [boite(), `12 ou plus : ${suite}     `, boite(), `8 à 11 : orientation Année ${livret.annee}     `,
-        boite(), `moins de 8 : ${descente}`])])]);
+      cond ? el("div", "", `Conditions (fiche d'entretien) : lettres …… / 28 · nombres …… / ${cond.plage === "1 à 10" ? 10 : 21}`) : "",
+      el("div", "", (() => {
+        const lignes = [boite(), `${seuilTexte} : ${suite}     `];
+        if (cond) lignes.push(boite(), `12 ou plus mais conditions non remplies : orientation Année ${livret.annee}     `);
+        lignes.push(boite(), `8 à 11 : orientation Année ${livret.annee}     `, boite(), `moins de 8 : ${descente}`);
+        return lignes;
+      })())])]);
 }
 function libelleReponse(item) {
   const k = item.reponse - 1;
@@ -226,6 +258,7 @@ function fiche(livret) {
   const suite = livret.numero === 5 ? "niveau A2 atteint" : `Livret ${livret.numero + 1} à une séance suivante`;
   const descente = livret.numero === 1 ? "orientation Année 1"
     : `Livret ${livret.numero - 1} à une séance suivante (s'il n'a pas déjà été passé)`;
+  const cond = conditionLivret(livret);
   page([
     el("div", "entete", [el("h1", "", `Livret ${livret.numero} — fiche enseignante`),
       el("div", "petit", `Acquis de l'Année ${livret.annee}`)]),
@@ -244,7 +277,12 @@ function fiche(livret) {
       livret.items.map((i) => [String(numeroItem(i)), mixte(libelleReponse(i)),
         i.tolerance || "Une seule réponse entourée.", mixte(i.source)])),
     el("h2", "", "Décision (cascade)"),
-    tableau([`Score au Livret ${livret.numero}`, "Suite"], [
+    cond ? el("p", "note", `Condition supplémentaire (fiche d'entretien) : ${texteCondition(cond)}.`) : "",
+    tableau([`Score au Livret ${livret.numero}`, "Suite"], cond ? [
+      ["12 à 16 / 16 ET conditions remplies", suite],
+      [`12 à 16 / 16 mais conditions non remplies`, `orientation Année ${livret.annee}`],
+      ["8 à 11 / 16", `Orientation en Année ${livret.annee} (11/16 : « proche du niveau supérieur », réévaluer après 3 séances)`],
+      ["0 à 7 / 16", descente]] : [
       ["12 à 16 / 16", suite],
       ["8 à 11 / 16", `Orientation en Année ${livret.annee} (11/16 : « proche du niveau supérieur », réévaluer après 3 séances)`],
       ["0 à 7 / 16", descente]]),
@@ -278,6 +316,26 @@ function entretien() {
     el("p", "", "Années d'arabe déjà faites : ……      Sait lire l'arabe : oui / non"),
     el("p", "", [1, 2, 3, 4, 5].flatMap((n) => [boite(), `Livret ${n}     `]).concat([boite(), "Année 1 directement (total < 6)"])),
     el("p", "note", "Livret de départ = années d'arabe déjà faites (0 ou 1 an → Livret 1 ; 5 ans ou plus → Livret 5).")]);
+  page([
+    el("div", "entete", [el("h1", "", "Fiche d'entretien individuel (suite)"), el("div", "petit", C.meta.etablissement)]),
+    el("p", "", "Nom : ……………………………………………      Prénom : ……………………………………………"),
+    el("h2", "", "Alphabet et nombres — si total ≥ 6"),
+    el("p", "note",
+      "À l'écran « Entretien » : l'élève reconnaît et nomme chaque lettre, puis chaque nombre, à voix haute. Cocher chaque lettre et chaque nombre nommés correctement."),
+    el("h3", "", "Alphabet (même ordre qu'à l'écran)"),
+    grille(e.alphabet, 7, (l) => [ar(l.lettre, "ar-grand"), el("div", "nom-petit", ar(l.nom)), boite()]),
+    el("p", "", [el("b", "", "Lettres : …… / 28")]),
+    el("h3", "", "Nombres (même ordre qu'à l'écran)"),
+    el("p", "", "1 à 10 :"),
+    grille(e.nombres.un_a_dix, 7, (n) => [el("div", "chiffre-grand", String(n.n)), el("div", "nom-petit", ar(n.nom)), boite()]),
+    el("p", "", [el("b", "", "…… / 10")]),
+    el("p", "", "0 et 11 à 20 :"),
+    grille(e.nombres.zero_et_onze_a_vingt, 7,
+      (n) => [el("div", "chiffre-grand", String(n.n)), el("div", "nom-petit", ar(n.nom)), boite()]),
+    el("p", "", [el("b", "", "…… / 11"), "     ", el("b", "", "Total nombres 0 à 20 : …… / 21")]),
+    el("p", "note",
+      "Condition Livret 1 réussi : 12/16 ou plus ET lettres ≥ 20/28 ET nombres 1 à 10 ≥ 7/10 ; sinon, orientation Année 1. " +
+      "Condition Livret 2 réussi : 12/16 ou plus ET lettres 28/28 ET nombres 0 à 20 = 21/21 ; sinon, orientation Année 2.")]);
 }
 
 function synthese() {
@@ -285,7 +343,8 @@ function synthese() {
   document.documentElement.classList.add("paysage");
   document.head.append(el("style", "", "@page { size: A4 landscape; margin: 10mm; }"));
   const entetes = ["Nom", "Âge", "Années d'arabe", "Entretien /8", "Prononc.", "Aisance",
-    "Livrets passés : score /16 (Lang. · Écr. · Lect. · Éc.)", "Orientation", "Profil", "Mentions", "Remarques"];
+    "Livrets passés : score /16 (Lang. · Écr. · Lect. · Éc.)", "Lettres /28 · Nombres /21", "Orientation", "Profil",
+    "Mentions", "Remarques"];
   page([
     el("div", "entete", [el("h1", "", "Fiche de synthèse de classe"), el("div", "petit", C.meta.etablissement)]),
     tableau(entetes, Array.from({ length: 14 }, () => entetes.map(() => "\u00a0"))),
@@ -321,9 +380,10 @@ function guide() {
       [" — pour chaque mot : son juste, approché ou absent. Prononciation : Acquis (4 justes), En cours (2-3), Non acquis (0-1). Aisance : réponses spontanées, hésitantes ou absentes."])),
     el("p", "", ["Total ≥ 6/8 : l'élève passe un livret. Total < 6/8 : orientation en Année 1 ; l'élève lit alors à l'écran "]
       .concat(ent.reperage.map((r) => ar(r + " ")), ["— 2 ou 3 lus : profil « décodeur », sinon « grand débutant »."])),
+    el("p", "",
+      "Total ≥ 6/8 : montrer aussi, sur l'écran « Entretien », la grille des 28 lettres puis les deux écrans de nombres (1 à 10, puis 0 et 11 à 20). L'élève reconnaît et nomme chaque lettre puis chaque nombre à voix haute ; l'enseignante coche sur la fiche d'entretien. Ces résultats conditionnent la réussite des Livrets 1 et 2 (section 6)."),
     tableau(["Années d'arabe déjà faites", "0 ou 1", "2", "3", "4", "5 ou plus"],
-      [["Livret de départ", "Livret 1", "Livret 2", "Livret 3", "Livret 4", "Livret 5"]])]);
-  page([
+      [["Livret de départ", "Livret 1", "Livret 2", "Livret 3", "Livret 4", "Livret 5"]]),
     el("h2", "", "5. La séance de livret"),
     el("ul", "", [
       "Ouvrir Accueil.html et choisir le livret ; passer en plein écran avec la touche F.",
@@ -339,10 +399,17 @@ function guide() {
       ["8 à 11", "Orientation en Année N (11 : « proche du niveau supérieur », réévaluer après 3 séances)"],
       ["0 à 7", "Livret N-1 à une séance suivante s'il n'a pas déjà été passé ; au Livret 1 : orientation Année 1"]]),
     el("p", "", "Après une descente, on ne remonte jamais vers un livret déjà échoué : si le livret inférieur est réussi, l'élève est orienté dans l'année du livret échoué."),
+    el("h3", "", "Conditions supplémentaires des Livrets 1 et 2"),
+    el("p", "",
+      "Un score de 12/16 ou plus ne suffit pas seul aux Livrets 1 et 2 : les résultats de la fiche d'entretien (alphabet et nombres) sont aussi requis, sinon c'est l'orientation dans l'année du livret qui s'applique."),
+    tableau(["Livret", "12 à 16/16 ET", "Sinon (même à 12/16 ou plus)"], [
+      ["1", "lettres ≥ 20/28 et nombres 1 à 10 ≥ 7/10", "orientation Année 1"],
+      ["2", "lettres 28/28 et nombres 0 à 20 = 21/21", "orientation Année 2"]]),
     el("h3", "", "Exemples"),
     el("ul", "", [
-      "Inès, 9 ans, 2 ans d'arabe : entretien 7/8 → Livret 2 : 13/16 (réussi) → Livret 3 : 9/16 → orientation Année 3.",
-      "Yanis, 12 ans, 3 ans d'arabe : entretien 6/8 → Livret 3 : 6/16 → Livret 2 : 12/16 (réussi) → orientation Année 3.",
+      "Inès, 9 ans, 2 ans d'arabe : entretien 7/8 → Livret 2 : 13/16, conditions remplies (réussi) → Livret 3 : 9/16 → orientation Année 3.",
+      "Yanis, 12 ans, 3 ans d'arabe : entretien 6/8 → Livret 3 : 6/16 → Livret 2 : 12/16, conditions remplies (réussi) → orientation Année 3.",
+      "Nora, 8 ans, 1 an d'arabe : entretien 6/8 → Livret 1 : 14/16 mais lettres 18/28 (condition non remplie) → orientation Année 1 malgré le score.",
       "Sami, 7 ans, sans arabe : entretien 3/8, lit 2 syllabes sur 3 → orientation Année 1, profil « décodeur ».",
       "Lina, 14 ans, orientée en Année 2 : 14 ans ≥ 11 → « groupe à rythme adapté conseillé »."].map((t) => el("li", "", t))),
     el("h2", "", "7. Profils et âge"),
@@ -354,8 +421,7 @@ function guide() {
     tableau(["Année d'orientation", "Âge de référence", "« Rythme adapté conseillé » dès"], [
       ["Année 1", "6-8 ans", "11 ans"], ["Année 2", "7-8 ans", "11 ans"], ["Année 3", "8-9 ans", "12 ans"],
       ["Année 4", "9-10 ans", "13 ans"], ["Année 5", "10-11 ans", "14 ans"]]),
-    el("p", "note", "Un écart de 3 points ou plus entre deux sous-scores d'un livret est noté « profil déséquilibré » : c'est une piste de remédiation, sans effet sur l'orientation.")]);
-  page([
+    el("p", "note", "Un écart de 3 points ou plus entre deux sous-scores d'un livret est noté « profil déséquilibré » : c'est une piste de remédiation, sans effet sur l'orientation."),
     el("h2", "", "8. Traçabilité : chaque item et sa source dans les référentiels"),
     ...C.livrets.map((l) => el("div", "", [el("h3", "", `Livret ${l.numero} — Année ${l.annee}`),
       tableau(["N°", "Partie", "Référentiel"], l.items.map((i) => [i.id, nomPartie(i.partie), mixte(i.source)]))]))]);
