@@ -82,6 +82,8 @@
   .avec-texte { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 680px; gap: 40px; align-items: center; }
   .texte-lecture { background: var(--carte); border-radius: 26px; padding: 28px 36px; font-size: 36px; line-height: 1.9;
                    box-shadow: 0 6px 24px rgba(26,77,92,.12); border-inline-end: 10px solid var(--accent); }
+  .texte-lecture.long { font-size: 28px; line-height: 1.75; }
+  .texte-lecture.tres-long { font-size: 23px; line-height: 1.6; padding: 20px 28px; }
   .avec-texte .options.verticales { min-width: 0; }
   .avec-texte .options.images .illu { width: 190px; height: 190px; }
   .pied { display: flex; align-items: center; gap: 20px; padding: 0 28px; color: var(--encre-douce); font-size: 18px;
@@ -195,17 +197,20 @@ const RENDUS = {
   "intrus": (item) => [options(item, (o) => el("div", "opt-num", o))],
 };
 
-function points(rangPartie, numero) {
+function points(total, faits) {
   const conteneur = el("span", "points");
-  for (let j = 1; j <= 4; j += 1) conteneur.append(el("i", rangPartie * 4 + j <= numero ? "fait" : ""));
+  for (let j = 1; j <= total; j += 1) conteneur.append(el("i", j <= faits ? "fait" : ""));
   return conteneur;
 }
 
-function bandeau(titre, sousTitre, partieActive, numero) {
+function bandeau(titre, sousTitre, livret, partieActive, numero) {
   const enfants = [el("div", "livret", titre), el("div", "annee", sousTitre)];
-  if (partieActive !== undefined) {
-    enfants.push(el("div", "parties", C.parties.map((p, k) =>
-      el("span", p.id === partieActive ? "active" : "", [p.nom, points(k, numero)]))));
+  if (livret) {
+    enfants.push(el("div", "parties", partiesDuLivret(livret).map((p) => {
+      const rangs = livret.items.map((it, k) => (it.partie === p.id ? k + 1 : 0)).filter(Boolean);
+      return el("span", p.id === partieActive ? "active" : "",
+        [p.court, points(rangs.length, rangs.filter((n) => n <= numero).length)]);
+    })));
   }
   return el("header", "bandeau", enfants);
 }
@@ -236,11 +241,12 @@ function pied() {
 }
 
 function ecranAccueil(livret) {
-  return [bandeau(`Livret ${livret.numero}`, `Acquis de l'Année ${livret.annee}`, "", 0),
+  return [bandeau(`Livret ${livret.numero}`, `Acquis de l'Année ${livret.annee}`, livret, "", 0),
     el("div", "corps accueil", [
       el("div", "titre-accueil", `Livret ${livret.numero}`),
-      el("div", "sous-titre", `Acquis de l'Année ${livret.annee} · 16 questions · 4 parties`),
-      el("div", "chips", C.parties.map((p) => el("span", "chip", p.nom))),
+      el("div", "sous-titre",
+        `Acquis de l'Année ${livret.annee} · ${livret.items.length} questions · ${partiesDuLivret(livret).length} parties`),
+      el("div", "chips", partiesDuLivret(livret).map((p) => el("span", "chip", p.court))),
       barreConsigne("c-accueil"),
       el("div", "consigne-depart", "Appuyez sur → pour commencer")]),
     pied()];
@@ -253,15 +259,19 @@ function ecranItem(livret, item) {
     ? el("div", "principal avec-image", [el("div", "illu-cadre", image(item.image)), el("div", "colonne", contenu)])
     : el("div", "principal", contenu);
   const corps = el("div", "corps", [barreConsigne(item.consigne)]);
-  if (item.texte) corps.append(el("div", "avec-texte", [principal, ar(livret.textes[item.texte], "texte-lecture")]));
-  else corps.append(principal);
+  if (item.texte) {
+    const texte = livret.textes[item.texte];
+    const n = texte.split(/\s+/).length;
+    corps.append(el("div", "avec-texte", [principal,
+      ar(texte, "texte-lecture" + (n > 100 ? " tres-long" : n > 60 ? " long" : ""))]));
+  } else corps.append(principal);
   if (item.son || item.sons) corps.append(boutonEcouter());
   corps.append(el("div", "badge-item", [el("span", "", "N°"), el("b", "", String(numero))]));
-  return [bandeau(`Livret ${livret.numero}`, `Acquis de l'Année ${livret.annee}`, item.partie, numero), corps, pied()];
+  return [bandeau(`Livret ${livret.numero}`, `Acquis de l'Année ${livret.annee}`, livret, item.partie, numero), corps, pied()];
 }
 
 function ecranFin(livret) {
-  return [bandeau(`Livret ${livret.numero}`, `Acquis de l'Année ${livret.annee}`, "", 16),
+  return [bandeau(`Livret ${livret.numero}`, `Acquis de l'Année ${livret.annee}`, livret, "", livret.items.length),
     el("div", "corps accueil", [el("div", "titre-accueil", "C'est terminé !"),
       el("div", "sous-titre", "Bravo. Pose ton crayon."), barreConsigne("c-fin")]),
     pied()];
@@ -317,15 +327,15 @@ function jouerFichier(id, jeton) {
   });
 }
 
-async function jouer(ids, fois) {
+async function jouer(ids, fois, eclairer = false) {
   arreter();
   const jeton = lecteur.jeton;
   document.querySelectorAll(".btn-ecouter").forEach((b) => b.classList.add("en-lecture"));
   for (let tour = 0; tour < fois; tour += 1) {
     for (let i = 0; i < ids.length; i += 1) {
-      if (ids.length > 1) allumer(i);
+      if (eclairer) allumer(i);
       if (!(await jouerFichier(ids[i], jeton))) return;
-      if (ids.length > 1) allumer(-1);
+      if (eclairer) allumer(-1);
       if (i < ids.length - 1 && !(await pause(700, jeton))) return;
     }
     if (tour < fois - 1 && !(await pause(1500, jeton))) return;
@@ -335,7 +345,7 @@ async function jouer(ids, fois) {
 
 function jouerItem() {
   const item = ecrans[index].item;
-  if (item && item.sons) jouer(item.sons, 2);
+  if (item && item.sons) jouer(item.sons, 2, item.type === "intrus");
   else if (item && item.son) jouer([item.son], 2);
 }
 
